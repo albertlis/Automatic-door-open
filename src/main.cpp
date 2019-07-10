@@ -3,36 +3,34 @@
 #include "RTClib.h"
 #include <BH1750FVI.h>
 #include <Servo.h>
+#include <stdint.h>
 
 //Pins
-#define servoPin 52
-#define openingEdgePin 2
-#define closingEdgePin 3
-#define openButtonPin 48
-#define closeButtonPin 50
+const constexpr uint8_t servoPin{52};
+const constexpr uint8_t openingEdgePin{2}, closingEdgePin{3};
+const constexpr uint8_t openButtonPin{48}, closeButtonPin{50};
 
 //constants
-#define hourClose 20
-#define hourOpen 5
-#define lightClose 10
-#define lightOpen 100
-#define closeSpeed 50
-#define openSpeed 140
-#define checkDelay 1000
-#define maxMovingTime 5000
-
+const constexpr uint8_t hourClose{20}, hourOpen{5};
+const constexpr uint8_t lightClose{10}, lightOpen{100};
+const constexpr uint8_t closeSpeed{50}, openSpeed{140};
+const constexpr uint16_t checkDelay{1000};
+const constexpr uint16_t maxMovingTime{5000};
 //classes
 struct sGate
 {
+    //variables
     bool isOpening = false;
     bool isClosing = false;
     bool isOpened = false;
     bool isClosed = false;
     unsigned long startMovingTime;
+
+    //functions
     void openGate();
     void closeGate();
-    bool shouldClose();
-    bool shouldOpen();
+    bool shouldClose() const;
+    bool shouldOpen() const;
 };
 
 //Objects
@@ -52,7 +50,9 @@ void printLightIntensivity();
 void openingEdgeISR();
 void closingEdgeISR();
 
-//setup
+/**************************************************************
+ *                          Setup
+ **************************************************************/
 void setup()
 {
     pinMode(openingEdgePin, INPUT_PULLUP);
@@ -76,7 +76,9 @@ void setup()
     Serial.println(F("Conected with light sensor"));
 }
 
-//main loop
+/***************************************************************
+ *                  Loop
+ ***************************************************************/
 void loop()
 {
     if (millis() - millisNow > checkDelay)
@@ -108,7 +110,12 @@ void loop()
         gate.closeGate();
 }
 
-//Functions definitions
+/************************************************************************************
+ * 
+ *                          Definitions
+ * 
+ ************************************************************************************/
+
 void sGate::openGate()
 {
     isOpening = true;
@@ -126,6 +133,22 @@ void sGate::closeGate()
         servo.attach(servoPin);
     servo.write(closeSpeed);
     gate.startMovingTime = millis();
+}
+
+bool sGate::shouldOpen() const
+{
+    if (date.hour() < hourClose && date.hour() >= hourOpen && light > lightOpen)
+        return true;
+    else
+        return false;
+}
+
+bool sGate::shouldClose() const
+{
+    if ((date.hour() >= hourClose || date.hour() < hourOpen) && light < lightClose)
+        return true;
+    else
+        return false;
 }
 
 void openingEdgeISR()
@@ -148,22 +171,6 @@ void closingEdgeISR()
         gate.isClosed = true;
         Serial.println(F("closing edge interrupt"));
     }
-}
-
-bool sGate::shouldOpen()
-{
-    if (date.hour() < hourClose && date.hour() >= hourOpen && light > lightOpen)
-        return true;
-    else
-        return false;
-}
-
-bool sGate::shouldClose()
-{
-    if ((date.hour() >= hourClose || date.hour() < hourOpen) && light < lightClose)
-        return true;
-    else
-        return false;
 }
 
 void printDate()
