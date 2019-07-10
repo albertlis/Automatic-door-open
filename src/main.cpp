@@ -24,6 +24,7 @@ struct sGate
     bool isClosing = false;
     bool isOpened = false;
     bool isClosed = false;
+    bool isSafetyStop = false;
     unsigned long startMovingTime;
 
     //functions
@@ -31,6 +32,7 @@ struct sGate
     void closeGate();
     bool shouldClose() const;
     bool shouldOpen() const;
+    void safetyStop();
 };
 
 //Objects
@@ -86,28 +88,31 @@ void loop()
         millisNow = millis();
         printDate();
         printLightIntensivity();
-        //if (shouldClose() && (!gate.isClosed))
-        if ((light < lightClose) && (!gate.isClosed))
+        if (gate.shouldClose() && (!gate.isClosed) ) //if ((light < lightClose) && (!gate.isClosed))
         {
-            gate.closeGate();
+            if((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
+                gate.closeGate();
         }
-        //if (shouldOpen() && (!gate.isOpened))
-        if ((light > lightOpen) && (!gate.isOpened))
+        if (gate.shouldOpen() && (!gate.isOpened)) //if ((light > lightOpen) && (!gate.isOpened))
         {
-            gate.openGate();
+            if( (!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
+                gate.openGate();
         }
     }
     if ((gate.isOpening || gate.isClosing) && (millis() - gate.startMovingTime > maxMovingTime))
     {
-        Serial.println(F("Reached max moving time, safety stop"));
-        servo.detach();
-        gate.isOpening = false;
-        gate.isClosing = false;
+        gate.safetyStop();
     }
     if((digitalRead(openButtonPin) == LOW) && (!gate.isOpened))
+    {
         gate.openGate();
+        gate.isSafetyStop = false;
+    }
     if((digitalRead(closeButtonPin) == LOW) && (!gate.isClosed))
+    {
         gate.closeGate();
+        gate.isSafetyStop = false;
+    }
 }
 
 /************************************************************************************
@@ -115,6 +120,14 @@ void loop()
  *                          Definitions
  * 
  ************************************************************************************/
+void sGate::safetyStop()
+{
+    Serial.println(F("Reached max moving time, safety stop"));
+    servo.detach();
+    isOpening = false;
+    isClosing = false;
+    isSafetyStop = true;
+}
 
 void sGate::openGate()
 {
@@ -135,20 +148,16 @@ void sGate::closeGate()
     gate.startMovingTime = millis();
 }
 
-bool sGate::shouldOpen() const
+inline bool sGate::shouldOpen() const
 {
-    if (date.hour() < hourClose && date.hour() >= hourOpen && light > lightOpen)
-        return true;
-    else
-        return false;
+    //Serial.println(F("Should open function"));
+    return (date.hour() < hourClose && date.hour() >= hourOpen && light > lightOpen) ? true : false;
 }
 
-bool sGate::shouldClose() const
+inline bool sGate::shouldClose() const
 {
-    if ((date.hour() >= hourClose || date.hour() < hourOpen) && light < lightClose)
-        return true;
-    else
-        return false;
+    //Serial.println(F("Should close function"));
+    return ((date.hour() >= hourClose || date.hour() < hourOpen) && light < lightClose) ? true : false;
 }
 
 void openingEdgeISR()
