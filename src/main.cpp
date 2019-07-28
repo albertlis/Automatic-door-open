@@ -11,10 +11,6 @@ const constexpr uint8_t openingEdgePin{2}, closingEdgePin{3};
 const constexpr uint8_t openButtonPin{48}, closeButtonPin{50};
 
 //constants
-const constexpr uint8_t hourClose{20}, hourOpen{4};
-const constexpr uint8_t absoluteHourClose{23}, absoluteHourOpen{8};
-const constexpr uint8_t lightClose{10}, lightOpen{100};
-const constexpr uint8_t closeSpeed{50}, openSpeed{140};
 const constexpr uint16_t checkDelay{1000};
 const constexpr uint16_t maxMovingTime{5000};
 
@@ -28,6 +24,12 @@ struct sGate
     bool isClosed = false;
     bool isSafetyStop = false;
     unsigned long startMovingTime;
+
+    //constants
+    const static uint8_t hourOpen{4}, hourClose{20};
+    const static uint8_t absoluteHourClose{23}, absoluteHourOpen{8};
+    const static uint8_t lightClose{10}, lightOpen{100};
+    const static uint8_t closeSpeed{50}, openSpeed{140};
 
     //functions
     void openGate();
@@ -103,6 +105,9 @@ void loop()
             if( (!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
                 gate.openGate();
         }
+        /***********************************************************************
+         *              Check this code
+         ***********************************************************************/
         //Absolute opening or closing if reached time
         //Chceck if should be absolute closed and if is closed
         if (gate.shouldAbsoluteClose() && (!gate.isClosed) ) //if ((light < lightClose) && (!gate.isClosed))
@@ -118,6 +123,9 @@ void loop()
             if( (!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
                 gate.openGate();
         }
+        /***********************************************************************
+         *             Finish here
+         **********************************************************************/
     }
     if ((gate.isOpening || gate.isClosing) && (millis() - gate.startMovingTime > maxMovingTime))
     {
