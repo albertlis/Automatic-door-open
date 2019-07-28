@@ -18,12 +18,12 @@ const constexpr uint16_t maxMovingTime{5000};
 struct sGate
 {
     //variables
-    bool isOpening = false;
-    bool isClosing = false;
-    bool isOpened = false;
-    bool isClosed = false;
-    bool isSafetyStop = false;
-    unsigned long startMovingTime;
+    bool isOpening{false};
+    bool isClosing{false};
+    bool isOpened{false};
+    bool isClosed{false};
+    bool isSafetyStop{false};
+    unsigned long startMovingTime{0};
 
     //constants
     const static uint8_t hourOpen{4}, hourClose{20};
