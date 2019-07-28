@@ -11,11 +11,13 @@ const constexpr uint8_t openingEdgePin{2}, closingEdgePin{3};
 const constexpr uint8_t openButtonPin{48}, closeButtonPin{50};
 
 //constants
-const constexpr uint8_t hourClose{20}, hourOpen{5};
+const constexpr uint8_t hourClose{20}, hourOpen{4};
+const constexpr uint8_t absoluteHourClose{23}, absoluteHourOpen{8};
 const constexpr uint8_t lightClose{10}, lightOpen{100};
 const constexpr uint8_t closeSpeed{50}, openSpeed{140};
 const constexpr uint16_t checkDelay{1000};
 const constexpr uint16_t maxMovingTime{5000};
+
 //classes
 struct sGate
 {
@@ -32,6 +34,8 @@ struct sGate
     void closeGate();
     bool shouldClose() const;
     bool shouldOpen() const;
+    bool shouldAbsoluteClose() const;
+    bool shouldAbsoluteOpen() const;
     void safetyStop();
 };
 
@@ -88,6 +92,7 @@ void loop()
         millisNow = millis();
         printDate();
         printLightIntensivity();
+
         if (gate.shouldClose() && (!gate.isClosed) ) //if ((light < lightClose) && (!gate.isClosed))
         {
             if((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
@@ -95,6 +100,21 @@ void loop()
         }
         if (gate.shouldOpen() && (!gate.isOpened)) //if ((light > lightOpen) && (!gate.isOpened))
         {
+            if( (!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
+                gate.openGate();
+        }
+        //Absolute opening or closing if reached time
+        //Chceck if should be absolute closed and if is closed
+        if (gate.shouldAbsoluteClose() && (!gate.isClosed) ) //if ((light < lightClose) && (!gate.isClosed))
+        {
+            //chceck if is moving and saftey stop is disabled
+            if((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
+                gate.closeGate();
+        }
+        //Chceck if should be absolute opened and is opened
+        if (gate.shouldAbsoluteOpen() && (!gate.isOpened)) //if ((light > lightOpen) && (!gate.isOpened))
+        {
+            //chceck if is moving and saftey stop is disabled
             if( (!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
                 gate.openGate();
         }
@@ -152,6 +172,18 @@ inline bool sGate::shouldOpen() const
 {
     //Serial.println(F("Should open function"));
     return (date.hour() < hourClose && date.hour() >= hourOpen && light > lightOpen) ? true : false;
+}
+
+inline bool sGate::shouldAbsoluteClose() const
+{
+    //Serial.println(F("Should close function"));
+    return ((date.hour() >= absoluteHourClose) || (date.hour() < hourOpen)) ? true : false;
+}
+
+inline bool sGate::shouldAbsoluteOpen() const
+{
+    //Serial.println(F("Should open function"));
+    return ((date.hour() < hourClose) && (date.hour() >= absoluteHourOpen)) ? true : false;
 }
 
 inline bool sGate::shouldClose() const
