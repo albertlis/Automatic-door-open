@@ -14,7 +14,6 @@ const constexpr uint8_t openButtonPin{48}, closeButtonPin{50};
 //constants
 const constexpr uint16_t checkDelay{1000};
 const constexpr uint16_t maxMovingTime{5000};
-const constexpr uint16_t eepromEndAddress{1023};
 
 //classes
 struct sGate
@@ -43,7 +42,8 @@ struct sGate
     void safetyStop();
 };
 
-struct sLog {
+struct sLog
+{
     uint8_t hour{0};
     uint8_t minute{0};
     char move{'\0'}; //O - open C - close
@@ -106,14 +106,14 @@ void loop()
         printDate();
         printLightIntensivity();
 
-        if (gate.shouldClose() && (!gate.isClosed) ) //if ((light < lightClose) && (!gate.isClosed))
+        if (gate.shouldClose() && (!gate.isClosed)) //if ((light < lightClose) && (!gate.isClosed))
         {
-            if((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
+            if ((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
                 gate.closeGate();
         }
         if (gate.shouldOpen() && (!gate.isOpened)) //if ((light > lightOpen) && (!gate.isOpened))
         {
-            if( (!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
+            if ((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
                 gate.openGate();
         }
         /***********************************************************************
@@ -121,17 +121,17 @@ void loop()
          ***********************************************************************/
         //Absolute opening or closing if reached time
         //Chceck if should be absolute closed and if is closed
-        if (gate.shouldAbsoluteClose() && (!gate.isClosed) ) //if ((light < lightClose) && (!gate.isClosed))
+        if (gate.shouldAbsoluteClose() && (!gate.isClosed)) //if ((light < lightClose) && (!gate.isClosed))
         {
             //chceck if is moving and saftey stop is disabled
-            if((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
+            if ((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
                 gate.closeGate();
         }
         //Chceck if should be absolute opened and is opened
         if (gate.shouldAbsoluteOpen() && (!gate.isOpened)) //if ((light > lightOpen) && (!gate.isOpened))
         {
             //chceck if is moving and saftey stop is disabled
-            if( (!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
+            if ((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
                 gate.openGate();
         }
         /***********************************************************************
@@ -142,12 +142,12 @@ void loop()
     {
         gate.safetyStop();
     }
-    if((digitalRead(openButtonPin) == LOW) && (!gate.isOpened))
+    if ((digitalRead(openButtonPin) == LOW) && (!gate.isOpened))
     {
         gate.openGate();
         gate.isSafetyStop = false;
     }
-    if((digitalRead(closeButtonPin) == LOW) && (!gate.isClosed))
+    if ((digitalRead(closeButtonPin) == LOW) && (!gate.isClosed))
     {
         gate.closeGate();
         gate.isSafetyStop = false;
@@ -185,6 +185,8 @@ void sGate::openGate()
     EEPROM.get(eepromAddress, logs);
     //Serial.println
     eepromAddress += addressStep;
+    if(eepromAddress >= ( EEPROM.length() - 1)) 
+        eepromAddress = 0;
 }
 
 void sGate::closeGate()
@@ -205,6 +207,8 @@ void sGate::closeGate()
     EEPROM.get(eepromAddress, logs);
     //Serial.println
     eepromAddress += addressStep;
+    if(eepromAddress >= ( EEPROM.length() - 1)) 
+        eepromAddress = 0;
 }
 
 inline bool sGate::shouldOpen() const
