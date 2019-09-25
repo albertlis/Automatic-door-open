@@ -4,6 +4,7 @@
 #include <BH1750FVI.h>
 #include <Servo.h>
 #include <stdint.h>
+#include <EEPROM.h>
 
 //Pins
 const constexpr uint8_t servoPin{52};
@@ -13,6 +14,7 @@ const constexpr uint8_t openButtonPin{48}, closeButtonPin{50};
 //constants
 const constexpr uint16_t checkDelay{1000};
 const constexpr uint16_t maxMovingTime{5000};
+const constexpr uint16_t eepromEndAddress{1023};
 
 //classes
 struct sGate
@@ -41,16 +43,25 @@ struct sGate
     void safetyStop();
 };
 
+struct sLog {
+    uint8_t hour{0};
+    uint8_t minute{0};
+    char move{'\0'}; //O - open C - close
+};
+
 //Objects
 BH1750FVI myBH1750(BH1750_DEFAULT_I2CADDR, BH1750_ONE_TIME_HIGH_RES_MODE_2, BH1750_SENSITIVITY_DEFAULT, BH1750_ACCURACY_DEFAULT);
 RTC_DS1307 RTC;
 Servo servo;
 sGate gate;
+sLog logs;
 
 //Variables
 float light;
 DateTime date;
 unsigned long millisNow;
+uint16_t eepromAddress{0};
+const constexpr uint8_t addressStep{sizeof(sLog)};
 
 //Functions declarations
 void printDate();
@@ -164,6 +175,16 @@ void sGate::openGate()
         servo.attach(servoPin);
     servo.write(openSpeed);
     gate.startMovingTime = millis();
+
+    date = RTC.now();
+    logs.hour = date.hour();
+    logs.minute = date.minute();
+    logs.move = 'O';
+    EEPROM.put(eepromAddress, logs);
+    //Unit test
+    EEPROM.get(eepromAddress, logs);
+    //Serial.println
+    eepromAddress += addressStep;
 }
 
 void sGate::closeGate()
@@ -174,6 +195,16 @@ void sGate::closeGate()
         servo.attach(servoPin);
     servo.write(closeSpeed);
     gate.startMovingTime = millis();
+
+    date = RTC.now();
+    logs.hour = date.hour();
+    logs.minute = date.minute();
+    logs.move = 'C';
+    EEPROM.put(eepromAddress, logs);
+    //Unit test
+    EEPROM.get(eepromAddress, logs);
+    //Serial.println
+    eepromAddress += addressStep;
 }
 
 inline bool sGate::shouldOpen() const
@@ -243,5 +274,5 @@ void printLightIntensivity()
 {
     light = myBH1750.readLightLevel();
     Serial.print(light);
-    Serial.println(" lx");
+    Serial.println(F(" lx"));
 }
