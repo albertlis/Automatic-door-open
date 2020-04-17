@@ -17,6 +17,7 @@
 #define LOG_LIGHT
 #define PRINT_LOG_LIGHT
 // #define RESET_EEPROM_COUNTER
+// #define PRINT_LOG_MOVES
 /***********************************************************************
  * 
  *      Przy realizacji wyzerować licznik EEPROMu oraz ustawić datę
@@ -147,7 +148,13 @@ void writeLogIntoEeprom();
 #endif
 #ifdef LOG_LIGHT
 void logLightInfo();
-void writeLogIntoEeprom();
+void writeLightLogIntoEeprom();
+#endif
+#ifdef PRINT_LOG_LIGHT
+void printLightLogFromEeprom();
+#endif
+#ifdef PRINT_LOG_MOVES
+void printLogMovesFromEeprom();
 #endif
 float checkBatteryVoltage();
 
@@ -188,19 +195,6 @@ void setup() {
     #ifdef DEBUG
     printRtcSqwMode();
     Serial.println(F("Conected with light sensor"));
-
-    Serial.print("EEPROM counter: ");
-    eepromCounter = EEPROM.read(eepromCounterAddress);
-    Serial.println(eepromCounter + 1);
-    for(uint16_t i{0}; i < EEPROM.read(eepromCounterAddress); i += 2) {
-        sLog tempLog, tempLog1;
-        EEPROM.get(eepromAddress, tempLog);
-        eepromAddress += addressStep;
-        EEPROM.get(eepromAddress, tempLog1);
-        eepromAddress += addressStep;
-        Serial << "Godzina: " << tempLog.hour << " Minuta: " << tempLog.minute << " Ruch: " << tempLog.move << '\t'
-               << "Godzina: " << tempLog1.hour << " Minuta: " << tempLog1.minute << " Ruch: " << tempLog1.move << endl;
-    }
     #endif
     if (digitalRead(closingEdgePin) == LOW)
         gate.isClosed = true;
@@ -213,6 +207,9 @@ void setup() {
     // wdt_enable(WDTO_8S);
     #ifdef PRINT_LOG_LIGHT
     printLightLogFromEeprom();
+    #endif
+    #ifdef PRINT_LOG_MOVES
+    printLogMovesFromEeprom();
     #endif
 }
 
@@ -291,24 +288,20 @@ void loop() {
         }
     }
 
-    if (ledGreen.shouldBlink)
-        ledGreen.blink(1000);
-    else
-        ledGreen.stopBlinking();
-    if (ledRed.shouldBlink)
-        ledRed.blink(1000);
-    else 
-        ledRed.stopBlinking();
-    if (ledYellow.shouldBlink)
-        ledYellow.blink(1000);
-    else 
-        ledYellow.stopBlinking();
+    if (ledGreen.shouldBlink) ledGreen.blink(1000);
+    else ledGreen.stopBlinking();
+    if (ledRed.shouldBlink) ledRed.blink(1000);
+    else ledRed.stopBlinking();
+    if (ledYellow.shouldBlink) ledYellow.blink(1000);
+    else  ledYellow.stopBlinking();
     // delay(2000);
     // wdt_reset();
+    #ifdef LOG_LIGHT
     if (millis() - millisNow > logLightInterval) {
         logLightInfo();
         writeLightLogIntoEeprom();
     }
+    #endif
 }
 
 /************************************************************************************
@@ -403,6 +396,15 @@ inline bool sGate::shouldOpen() const {
     return ( (date.hour() < hourClose) && (date.hour() >= hourOpen) && (counter == lightTableSize)) ? true : false;
 }
 
+inline bool sGate::shouldClose() const {
+    //Serial.println(F("Should close function"));
+    uint8_t counter{0};
+    for(uint8_t i{0}; i < lightTableSize; ++i)
+        if (lights[i] < lightClose)
+            ++counter;
+    return ((date.hour() >= hourClose || date.hour() < hourOpen) && (counter == lightTableSize)) ? true : false;
+}
+
 inline bool sGate::shouldAbsoluteClose() const {
     //Serial.println(F("Should close function"));
     return ((date.hour() >= absoluteHourClose) || (date.hour() < hourOpen)) ? true : false;
@@ -413,28 +415,8 @@ inline bool sGate::shouldAbsoluteOpen() const {
     return ((date.hour() < hourClose) && (date.hour() >= absoluteHourOpen)) ? true : false;
 }
 
-inline bool sGate::shouldClose() const {
-    //Serial.println(F("Should close function"));
-    uint8_t counter{0};
-    for(uint8_t i{0}; i < lightTableSize; ++i)
-        if (lights[i] < lightClose)
-            ++counter;
-    return ((date.hour() >= hourClose || date.hour() < hourOpen) && (counter == lightTableSize)) ? true : false;
-}
-#ifdef PRINT
-void sGate::printInternalState() const {
-    Serial.print("Is closed: ");
-    Serial.print(gate.isClosed);
-    Serial.print(" Is opened: ");
-    Serial.print(gate.isOpened);
-    Serial.print(" Is closing: ");
-    Serial.print(gate.isClosing);
-    Serial.print(" Is opening: ");
-    Serial.print(gate.isOpening);
-    Serial.print(" Is safety stop: ");
-    Serial.println(gate.isSafetyStop);
-}
-#endif
+
+
 
 void openingEdgeISR() {
     // Serial.println(F("Opening ISR"));
@@ -488,12 +470,26 @@ void printDate() {
     Serial.print('\t');
 }
 
+void sGate::printInternalState() const {
+    Serial.print("Is closed: ");
+    Serial.print(gate.isClosed);
+    Serial.print(" Is opened: ");
+    Serial.print(gate.isOpened);
+    Serial.print(" Is closing: ");
+    Serial.print(gate.isClosing);
+    Serial.print(" Is opening: ");
+    Serial.print(gate.isOpening);
+    Serial.print(" Is safety stop: ");
+    Serial.println(gate.isSafetyStop);
+}
+
 void printLightIntensivity() {
     light = myBH1750.readLightLevel();
     Serial.print(light);
     Serial.println(F(" lx"));
 }
 #endif
+
 #ifdef LOG_MOVES
 void logInfo(char move) {
     date = RTC.now();
@@ -512,7 +508,22 @@ void writeLogIntoEeprom() {
     }
 }
 #endif
-
+#ifdef PRINT_LOG_MOVES
+void printLogMovesFromEeprom() {
+Serial.print("EEPROM counter: ");
+    eepromCounter = EEPROM.read(eepromCounterAddress);
+    Serial.println(eepromCounter + 1);
+    for(uint16_t i{0}; i < EEPROM.read(eepromCounterAddress); i += 2) {
+        sLog tempLog, tempLog1;
+        EEPROM.get(eepromAddress, tempLog);
+        eepromAddress += addressStep;
+        EEPROM.get(eepromAddress, tempLog1);
+        eepromAddress += addressStep;
+        Serial << "Godzina: " << tempLog.hour << " Minuta: " << tempLog.minute << " Ruch: " << tempLog.move << '\t'
+               << "Godzina: " << tempLog1.hour << " Minuta: " << tempLog1.minute << " Ruch: " << tempLog1.move << endl;
+    }
+}
+#endif
 #ifdef LOG_LIGHT
 void logLightInfo() {
     date = RTC.now();
@@ -529,6 +540,7 @@ void logLightInfo() {
     logLight.minute = date.minute();
     logLight.lightDividedBy2 = lightInt;
 }
+
 void writeLightLogIntoEeprom() {
     EEPROM.update(eepromCounterAddress, eepromCounter++);
     EEPROM.put(eepromAddress, logLight);
@@ -538,6 +550,8 @@ void writeLightLogIntoEeprom() {
         eepromCounter = 0;
     }
 }
+#endif
+#ifdef PRINT_LOG_LIGHT
 void printLightLogFromEeprom() {
     Serial.print("EEPROM counter: ");
     eepromCounter = EEPROM.read(eepromCounterAddress);
