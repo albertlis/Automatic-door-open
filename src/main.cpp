@@ -7,11 +7,16 @@
 #include <EEPROM.h>
 // #include <avr/wdt.h>
 #include <Streaming.h>
+#include <Math.h>
 // #include "LowPower.h"
 
 // #define DEBUG
-#define ADJUST_TIME
+// #define ADJUST_TIME
 #define PRINT
+// #define LOG_MOVES
+#define LOG_LIGHT
+#define PRINT_LOG_LIGHT
+// #define RESET_EEPROM_COUNTER
 /***********************************************************************
  * 
  *      Przy realizacji wyzerować licznik EEPROMu oraz ustawić datę
@@ -39,6 +44,7 @@ const constexpr uint16_t maxMovingTime{21000};
 const constexpr float batteryDischargeVoltage{2.05};
 const constexpr uint8_t eepromCounterAddress{0};
 const constexpr uint8_t lightTableSize{5};
+const constexpr uint32_t logLightInterval{300000};
 
 //classes
 class cLed {
@@ -83,21 +89,32 @@ struct sGate {
     void safetyStop();
     void printInternalState() const;
 };
-
+#ifdef LOG_MOVES
 struct sLog
 {
     uint8_t hour{0};
     uint8_t minute{0};
     char move{'\0'}; //O - open C - close
 };
+#endif
 
+#ifdef LOG_LIGHT
+struct LogLight {
+    uint16_t hour : 5, minute : 6, lightDividedBy2 : 5;
+};
+#endif
 //Objects
 BH1750FVI myBH1750(BH1750_DEFAULT_I2CADDR, BH1750_ONE_TIME_HIGH_RES_MODE_2, 0.5, BH1750_ACCURACY_DEFAULT);
 RTC_DS1307 RTC;
 Servo servo;
 sGate gate;
-sLog logs;
 cLed ledGreen(ledGreenPin), ledRed(ledRedPin), ledYellow(ledYellowPin);
+#ifdef LOG_MOVES
+sLog logs;
+#endif
+#ifdef LOG_LIGHT
+LogLight logLight;
+#endif
 
 //Variables
 float light;
@@ -105,7 +122,12 @@ float lights[lightTableSize];
 DateTime date;
 unsigned long millisNow;
 uint16_t eepromAddress{eepromCounterAddress + sizeof(uint16_t)};
+#ifdef LOG_MOVES
 const constexpr uint8_t addressStep{sizeof(sLog)};
+#endif
+#ifdef LOG_LIGHT
+const constexpr uint8_t addressStep{sizeof(LogLight)};
+#endif
 uint16_t eepromCounter{0};
 
 
@@ -119,8 +141,14 @@ void printRtcSqwMode();
 #endif
 void openingEdgeISR();
 void closingEdgeISR();
+#ifdef LOG_MOVES
 void logInfo(char move);
 void writeLogIntoEeprom();
+#endif
+#ifdef LOG_LIGHT
+void logLightInfo();
+void writeLogIntoEeprom();
+#endif
 float checkBatteryVoltage();
 
 /**************************************************************
@@ -178,10 +206,14 @@ void setup() {
         gate.isClosed = true;
     if (digitalRead(openingEdgePin) == LOW)
         gate.isOpened = true; 
-
-    // EEPROM.update(eepromCounterAddress, 0);
+    #ifdef RESET_EEPROM_COUNTER
+    EEPROM.update(eepromCounterAddress, 0);
+    #endif
     eepromCounter = EEPROM.read(eepromCounterAddress);
     // wdt_enable(WDTO_8S);
+    #ifdef PRINT_LOG_LIGHT
+    printLightLogFromEeprom();
+    #endif
 }
 
 /***************************************************************
@@ -273,6 +305,10 @@ void loop() {
         ledYellow.stopBlinking();
     // delay(2000);
     // wdt_reset();
+    if (millis() - millisNow > logLightInterval) {
+        logLightInfo();
+        writeLightLogIntoEeprom();
+    }
 }
 
 /************************************************************************************
@@ -330,9 +366,10 @@ void sGate::openGate() {
     ledGreen.shouldBlink = true;
     ledRed.shouldBlink = false;
     ledRed.turnOff();
-
+    #ifdef LOG_MOVES
     logInfo('O');
     writeLogIntoEeprom();
+    #endif
 }
 
 void sGate::closeGate() {
@@ -351,9 +388,10 @@ void sGate::closeGate() {
     ledGreen.turnOff();
     ledGreen.shouldBlink = true;
     ledRed.shouldBlink = false;
-
+    #ifdef LOG_MOVES
     logInfo('C');
     writeLogIntoEeprom();
+    #endif
 }
 
 inline bool sGate::shouldOpen() const {
@@ -362,7 +400,7 @@ inline bool sGate::shouldOpen() const {
     for(uint8_t i{0}; i < lightTableSize; ++i)
         if (lights[i] > lightClose)
             ++counter;
-    return (date.hour() < hourClose && date.hour() >= hourOpen && (counter == lightTableSize)) ? true : false;
+    return ( (date.hour() < hourClose) && (date.hour() >= hourOpen) && (counter == lightTableSize)) ? true : false;
 }
 
 inline bool sGate::shouldAbsoluteClose() const {
@@ -456,6 +494,7 @@ void printLightIntensivity() {
     Serial.println(F(" lx"));
 }
 #endif
+#ifdef LOG_MOVES
 void logInfo(char move) {
     date = RTC.now();
     logs.hour = date.hour();
@@ -472,6 +511,48 @@ void writeLogIntoEeprom() {
         eepromCounter = 0;
     }
 }
+#endif
+
+#ifdef LOG_LIGHT
+void logLightInfo() {
+    date = RTC.now();
+    float light;
+    for(uint8_t i{0}; i < 5; i++) {
+        light += myBH1750.readLightLevel();
+        delay(500);
+    }
+    light /= 5;
+    uint8_t lightInt = round(light/2);
+    if(lightInt >= 31)
+        lightInt = 31;
+    logLight.hour = date.hour();
+    logLight.minute = date.minute();
+    logLight.lightDividedBy2 = lightInt;
+}
+void writeLightLogIntoEeprom() {
+    EEPROM.update(eepromCounterAddress, eepromCounter++);
+    EEPROM.put(eepromAddress, logLight);
+    eepromAddress += addressStep;
+    if(eepromAddress >= ( EEPROM.length() - 1)) {
+        eepromAddress = 0;
+        eepromCounter = 0;
+    }
+}
+void printLightLogFromEeprom() {
+    Serial.print("EEPROM counter: ");
+    eepromCounter = EEPROM.read(eepromCounterAddress);
+    Serial.println(eepromCounter + 1);
+    for(uint16_t i{0}; i < eepromCounter; i += 2) {
+        LogLight tempLog, tempLog1;
+        EEPROM.get(eepromAddress, tempLog);
+        eepromAddress += addressStep;
+        EEPROM.get(eepromAddress, tempLog1);
+        eepromAddress += addressStep;
+        Serial << "Godzina: " << tempLog.hour << " Minuta: " << tempLog.minute << " Ruch: " << tempLog.lightDividedBy2 * 2 << '\t'
+               << "Godzina: " << tempLog1.hour << " Minuta: " << tempLog1.minute << " Ruch: " << tempLog1.lightDividedBy2 * 2 << endl;
+    }
+}
+#endif
 
 inline float mapfloat(long x, long in_min, long in_max, long out_min, long out_max) {
     return (float)(x - in_min) * (out_max - out_min) / (float)(in_max - in_min) + out_min;
