@@ -1,7 +1,7 @@
-# Automatic-door-open
+# Automatic door open system
 ### C++/Arduino
 
-Projekt jednoosobowy prywatny
+Projekt jednoosobowy prywatny.
 
 Zadania: 
 - Realizacja pomiaru i filtracji aktualnego natężenia światła
