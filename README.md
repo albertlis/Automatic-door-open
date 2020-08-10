@@ -1,12 +1,11 @@
 # Automatic door open system
-### C++/Arduino
+### Technologies: C++/Arduino
 
-Projekt jednoosobowy prywatny.
-
-Zadania: 
-- Realizacja pomiaru i filtracji aktualnego natężenia światła
-- Implementacja pomiaru czasu w oparciu o zegar czasu rzeczywistego DS1307
-- Kompensacja dryfu timera
-- Sygnalizacja stanu wewnętrznego za pomocą diód
-- Automatyczne otwieranie/zamykanie drzwi w zależności od czasu/natężenia światła
-- Tryb ręcznego sterowania
+Tasks: 
+- Measure and filtering light intensivity
+- Time measurement using DS1307 RTC timer
+- Timer drift compensation
+- Internal status signaling by LEDs
+- Automatic door opening/closing depending on time/light intensity
+- Manual control mode
+- Optimize power consumption
