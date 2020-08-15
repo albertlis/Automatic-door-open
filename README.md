@@ -34,6 +34,8 @@ The system was created for small farm specialized on breeding chickens. System i
 * Install necessary [libraries](#libraries) (It's highly recommended by using PlatformIO IDE)
 * If you use PlatformIO IDE then import project. If you use Platformio Core then go to project folder
 * If you use PlatformIO IDE then using graphical interface choose Project Tasks -> Build. If you use Platformio Core type `pio run` into terminal inside project folder.
+* Connect your microcontroller using FDTI. To use other programmers modify `upload_protocol` inside `platformio.ini` file. Check: [Upload options](https://docs.platformio.org/en/latest/projectconf/section_env_upload.html)
+* If you use PlatformIO IDE then using graphical interface choose Project Tasks -> Upload. If you use Platformio Core type `pio run --target upload` into terminal inside project folder.
 
 ## Features
 - Measure and filtering light intensivity
