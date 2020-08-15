@@ -1,7 +1,41 @@
 # Automatic door open system
-### Technologies: C++/Arduino
+> Low-power consumption system of releasing and closing animals on small farm depending on the time of day and time.
 
-Tasks: 
+## Table of contents
+* [General info](#general-info)
+* [Technologies](#technologies)
+* [Libraries](#libraries)
+* [Setup](#setup)
+* [Features](#features)
+* [Status](#status)
+* [Inspiration](#inspiration)
+* [Contact](#contact)
+
+## General info
+The system was created for small farm specialized on breeding chickens. System is designed to work all year round. During the year the sunrise and sunset time is changing. To solve this problem I decided to measure outdoor light intensivity. System is comparing it with current time and decides to open or close the door.
+
+## Technologies
+* C++/Arduino - std11
+* PlatformIO
+
+## Libraries
+* Wire (Arduino Standard Libraries)
+* EEPROM (Arduino Standard Libraries)
+* Math (avr-libc)- version 2.0.0
+* stdint (avr-libc) - version 2.0.0
+* RTClib - version 1.11.0
+* BH1750FVI - version 1.2.6
+* Servo - version 1.1.6
+* Streaming - version 0.0.0-alpha+sha.5
+
+## Setup
+* Clone this repository
+* Install PlatformIO IDE or Platformio Core (IDE is recomended): [PlatformIO](https://platformio.org)
+* Install necessary [libraries](#libraries) (It's highly recommended by using PlatformIO IDE)
+* If you use PlatformIO IDE then import project. If you use Platformio Core then go to project folder
+* If you use PlatformIO IDE then using graphical interface choose Project Tasks -> Build. If you use Platformio Core type `pio run` into terminal inside project folder.
+
+## Features
 - Measure and filtering light intensivity
 - Time measurement using DS1307 RTC timer
 - Timer drift compensation
@@ -9,3 +43,15 @@ Tasks:
 - Automatic door opening/closing depending on time/light intensity
 - Manual control mode
 - Optimize power consumption
+
+To-do list:
+- Improve manual control mode
+
+## Status
+Project is: _finished_
+
+## Inspiration
+Living on farm with animals it's not easy. Farmers have to wake up early and take care of this animals. Chickens are also going to sleep at specific time. If farmer has regular shift job, it's additional physical and mental stress for him. To help them in this situation I've decided for pro bono to design and develop this low-budget and low-power consumtion project. Total cost of this system is less than 20$.
+
+## Contact
+albert.lis.1996@gmail.com - feel free to contact me!
