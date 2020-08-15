@@ -7,6 +7,7 @@
 * [Libraries](#libraries)
 * [Setup](#setup)
 * [Features](#features)
+* [Development](#development)
 * [Status](#status)
 * [Inspiration](#inspiration)
 * [Contact](#contact)
@@ -49,6 +50,20 @@ The system was created for small farm specialized on breeding chickens. System i
 To-do list:
 - Improve manual control mode
 - Slow down CPU to 1MHz
+
+## Development
+Want to contribute? Great!
+
+To fix a bug or enhance an existing module, follow these steps:
+
+* Fork the repo
+* Create a new branch (`git checkout -b improve-feature`)
+* Make the appropriate changes in the files
+* Verify if they are correct
+* Add changes to reflect the changes made
+* Commit changes
+* Push to the branch (`git push origin improve-feature`)
+* Create a Pull Request
 
 ## Status
 Project is: _finished_
