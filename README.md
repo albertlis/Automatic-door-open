@@ -44,10 +44,11 @@ The system was created for small farm specialized on breeding chickens. System i
 - Internal status signaling by LEDs
 - Automatic door opening/closing depending on time/light intensity
 - Manual control mode
-- Optimize power consumption
+- Optimized power consumption
 
 To-do list:
 - Improve manual control mode
+- Slow down CPU to 1MHz
 
 ## Status
 Project is: _finished_
