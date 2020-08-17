@@ -14,7 +14,7 @@
 extern BH1750FVI myBH1750;
 extern RTC_DS1307 RTC;
 extern Servo servo;
-extern sGate gate;
+// extern sGate gate;
 extern cLed ledGreen, ledRed, ledYellow;
 #ifdef LOG_MOVES
 extern sLog logs;

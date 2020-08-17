@@ -12,5 +12,6 @@ extern DateTime date;
 extern unsigned long millisNow;
 extern uint16_t eepromAddress;
 extern uint16_t eepromCounter;
+extern bool compensateRtcDriftSwitch;
 
 #endif

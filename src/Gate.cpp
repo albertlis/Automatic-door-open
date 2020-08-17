@@ -3,6 +3,8 @@
 #include "pins.hpp"
 #include "switches.hpp"
 
+sGate gate;
+
 void sGate::safetyStop() {
     #ifdef DEBUG
     Serial.println(F("Reached max moving time, safety stop"));

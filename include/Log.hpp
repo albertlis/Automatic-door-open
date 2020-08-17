@@ -1,6 +1,7 @@
 #ifndef LOG_HPP
 #define LOG_HPP
 #include <Arduino.h>
+#include "switches.hpp"
 
 #ifdef LOG_MOVES
 struct sLog

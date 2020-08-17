@@ -159,3 +159,87 @@ void printRtcSqwMode() {
   }
 }
 #endif
+
+void setupPins() {
+  pinMode(openingEdgePin, INPUT_PULLUP);
+  pinMode(closingEdgePin, INPUT_PULLUP);
+  pinMode(openButtonPin, INPUT_PULLUP);
+  pinMode(closeButtonPin, INPUT_PULLUP);
+  pinMode(servoPin, OUTPUT);
+  pinMode(ledGreenPin, OUTPUT);
+  pinMode(ledRedPin, OUTPUT);
+  pinMode(ledYellowPin, OUTPUT);
+}
+
+void setupInterrupts() {
+  attachInterrupt(digitalPinToInterrupt(openingEdgePin), openingEdgeISR, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(closingEdgePin), closingEdgeISR, CHANGE);
+}
+
+void setupRTC() {
+  while(RTC.begin() != true) {
+      delay(5000);
+  }
+  #ifdef ADJUST_TIME
+  RTC.adjust(DateTime(__DATE__, __TIME__));
+  #endif
+  RTC.writeSqwPinMode(DS1307_OFF);
+  #ifdef DEBUG
+  printRtcSqwMode();
+  #endif
+}
+
+void setupLightSensor() {
+  while (myBH1750.begin() != true) {
+      #ifdef DEBUG
+      Serial.println(F("ROHM BH1750FVI is not present")); //(F()) saves string to flash & keeps dynamic memory free
+      #endif
+      delay(5000);
+  }
+  #ifdef DEBUG
+  Serial.println(F("Conected with light sensor"));
+  #endif
+}
+
+void readGatePosition() {
+  if (digitalRead(closingEdgePin) == LOW)
+      gate.isClosed = true;
+  if (digitalRead(openingEdgePin) == LOW)
+      gate.isOpened = true; 
+}
+
+void setupEEPROM() {
+  #ifdef RESET_EEPROM_COUNTER
+  EEPROM.update(eepromCounterAddress, 0);
+  #endif
+  eepromCounter = EEPROM.read(eepromCounterAddress);
+}
+
+void readLight() {
+  for (uint8_t i{0}; i < lightTableSize; ++i) {
+      lights[i] = myBH1750.readLightLevel();
+      delay(300);
+  }
+}
+
+void printInfo() {
+  printDate();
+  printLightIntensivity();
+  gate.printInternalState();
+}
+
+void compensateRtcDrift() {
+    delay(secondsDriftOffset*1000);
+    date = RTC.now();
+    DateTime tempDate = DateTime(date.unixtime() - secondsDriftOffset);
+    RTC.adjust(tempDate);
+}
+
+void controlLeds(){
+  if (ledGreen.shouldBlink) ledGreen.blink(1000);
+  else ledGreen.stopBlinking();
+  if (ledRed.shouldBlink) ledRed.blink(1000);
+  else ledRed.stopBlinking();
+  if (ledYellow.shouldBlink) ledYellow.blink(1000);
+  else  ledYellow.stopBlinking();
+}
