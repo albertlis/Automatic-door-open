@@ -27,7 +27,7 @@ The system was created for small farm specialized on breeding chickens. System i
 * RTClib - version 1.11.0
 * BH1750FVI - version 1.2.6
 * Servo - version 1.1.6
-* Streaming - version 0.0.0-alpha+sha.5
+* Streaming - version 5.0.0
 
 ## Setup
 * Clone this repository
