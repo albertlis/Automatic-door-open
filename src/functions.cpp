@@ -202,10 +202,14 @@ void setupLightSensor() {
 }
 
 void readGatePosition() {
-  if (digitalRead(closingEdgePin) == LOW)
+  if (digitalRead(closingEdgePin) == LOW) {
       gate.isClosed = true;
-  if (digitalRead(openingEdgePin) == LOW)
+      ledRed.turnOn();
+  }
+  if (digitalRead(openingEdgePin) == LOW) {
       gate.isOpened = true; 
+      ledGreen.turnOn();
+  }
 }
 
 void setupEEPROM() {

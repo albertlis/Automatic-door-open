@@ -1,9 +1,4 @@
 #include <Arduino.h>
-// #include <Wire.h>
-// #include <stdint.h>
-// #include <avr/wdt.h>
-// #include <Math.h>
-// #include "LowPower.h"
 #include "switches.hpp"
 #include "objects.hpp"
 #include "variables.hpp"
@@ -23,6 +18,7 @@
  *          -czerwona ciągły:    poprawnie zamknięty
  *          -czerwona miga:     safetyStop
  * 
+ * W kolejnej wersji dodać timer opóźniający załączenie
  * *********************************************************************/
 /*
   TODO add button reset after time
@@ -67,6 +63,8 @@ void loop() {
         if(date.hour() == 0 && date.minute() == 0 && compensateRtcDriftSwitch == true) {
             compensateRtcDrift();
             compensateRtcDriftSwitch = false;
+            gate.isCloseButtonClicked = false;
+            gate.isOpenButtonClicked = false;
         }    
         else if (date.hour() != 0)
             compensateRtcDriftSwitch = true;
