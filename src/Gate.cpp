@@ -2,6 +2,7 @@
 #include "objects.hpp"
 #include "pins.hpp"
 #include "switches.hpp"
+#include <Streaming.h>
 
 sGate gate;
 
@@ -65,15 +66,12 @@ void sGate::closeGate() {
 
 #ifdef PRINT
 void sGate::printInternalState() const {
-    Serial.print("Is closed: ");
-    Serial.print(gate.isClosed);
-    Serial.print(" Is opened: ");
-    Serial.print(gate.isOpened);
-    Serial.print(" Is closing: ");
-    Serial.print(gate.isClosing);
-    Serial.print(" Is opening: ");
-    Serial.print(gate.isOpening);
-    Serial.print(" Is safety stop: ");
-    Serial.println(gate.isSafetyStop);
+    Serial << "Is closed: " << gate.isClosed;
+    Serial << " Is opened: " << gate.isOpened;
+    Serial << " Is closing: " << gate.isClosing;
+    Serial << " Is opening: " << gate.isOpening;
+    Serial << " Is safety stop: " << gate.isSafetyStop;
+    Serial << " Is open button: " << gate.isOpenButtonClicked;
+    Serial << " Is close button: " << gate.isCloseButtonClicked << endl;
 }
 #endif
