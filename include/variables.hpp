@@ -13,5 +13,6 @@ extern unsigned long millisNow;
 extern uint16_t eepromAddress;
 extern uint16_t eepromCounter;
 extern bool compensateRtcDriftSwitch;
+extern bool isSummerTime;
 
 #endif

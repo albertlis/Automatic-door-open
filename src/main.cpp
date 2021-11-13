@@ -3,7 +3,7 @@
 #include "objects.hpp"
 #include "variables.hpp"
 #include "functions.hpp"
-
+#include <Streaming.h>
 
 /***********************************************************************
  * 
@@ -28,17 +28,30 @@
  *                          Setup
  **************************************************************/
 void setup() {
-    delay(1000);
+    // Slow down clocks to 1Mhz
+    noInterrupts();
+    CLKPR = _BV(CLKPCE);  // enable change of the clock prescaler
+    CLKPR = _BV(CLKPS2);  // divide frequency by 16
+    interrupts();
 
+    #ifdef PRINT
+    Serial.begin(9600);
+    Serial << F("Waiting 1s") << endl;
+    #endif
+    delay(1000);
+    #ifdef PRINT
+    Serial << F("Waiting finished") << endl;
+    #endif
     setupPins();
     setupInterrupts();
 
-    #ifdef PRINT
-    Serial.begin(115200);
-    #endif
     Wire.begin();
     
     setupRTC();
+    date = RTC.now();
+    if(date.month() >= 4 and date.month() <= 10)
+        isSummerTime = true;
+
     setupLightSensor();
 
     readGatePosition();
@@ -68,6 +81,8 @@ void loop() {
         }    
         else if (date.hour() != 0)
             compensateRtcDriftSwitch = true;
+
+        switchSummerWinterTime();
 
         readLight();
         

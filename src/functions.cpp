@@ -234,6 +234,7 @@ void printInfo() {
   printDate();
   printLightIntensivity();
   gate.printInternalState();
+  Serial << F("Is summer time: ") << isSummerTime << endl;
 }
 
 void compensateRtcDrift() {
@@ -241,6 +242,25 @@ void compensateRtcDrift() {
     date = RTC.now();
     DateTime tempDate = DateTime(date.unixtime() - secondsDriftOffset);
     RTC.adjust(tempDate);
+}
+
+void switchSummerWinterTime() {
+    if(isSummerTime == true && (date.month() <= 3 or date.month() >= 11)){
+        if(date.hour() > 2) {
+            date = RTC.now();
+            DateTime tempDate = DateTime(date.unixtime() - 3600);
+            RTC.adjust(tempDate);
+            isSummerTime = false;
+        }
+    }
+    else if(isSummerTime == false && (date.month() >= 4 and date.month() <= 10)) {
+        if(date.hour() > 2) {
+            date = RTC.now();
+            DateTime tempDate = DateTime(date.unixtime() + 3600);
+            RTC.adjust(tempDate);
+            isSummerTime = true;
+        }
+    }
 }
 
 void controlLeds(){
