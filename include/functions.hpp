@@ -18,7 +18,7 @@ void setupEEPROM();
 void readLight();
 void printInfo();
 void compensateRtcDrift();
-void switchSummerWinterTime();
+// void switchSummerWinterTime();
 void controlLeds();
 #ifdef PRINT
 void printDate();

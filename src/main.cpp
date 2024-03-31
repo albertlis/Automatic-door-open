@@ -30,8 +30,8 @@
 void setup() {
     // Slow down clocks to 1Mhz
     noInterrupts();
-    CLKPR = _BV(CLKPCE);  // enable change of the clock prescaler
-    CLKPR = _BV(CLKPS2);  // divide frequency by 16
+    // CLKPR = _BV(CLKPCE);  // enable change of the clock prescaler
+    // CLKPR = _BV(CLKPS2);  // divide frequency by 16
     interrupts();
 
     #ifdef PRINT
@@ -48,9 +48,9 @@ void setup() {
     Wire.begin();
     
     setupRTC();
-    date = RTC.now();
-    if(date.month() >= 4 and date.month() <= 10)
-        isSummerTime = true;
+    // date = RTC.now();
+    // if(date.month() >= 4 and date.month() <= 10)
+        // isSummerTime = true;
 
     setupLightSensor();
 
@@ -82,7 +82,7 @@ void loop() {
         else if (date.hour() != 0)
             compensateRtcDriftSwitch = true;
 
-        switchSummerWinterTime();
+        // switchSummerWinterTime();
 
         readLight();
         
@@ -90,27 +90,35 @@ void loop() {
         printInfo();
         #endif
         if (gate.shouldClose() && (!gate.isClosed)) {
-            if ((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
-                if(!gate.isOpenButtonClicked)
+            if ((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop)) {
+                if(!gate.isOpenButtonClicked) {
                     gate.closeGate();
+                }
+            }
         }
         if (gate.shouldOpen() && (!gate.isOpened)) {
-            if ((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
-                if(!gate.isCloseButtonClicked)
+            if ((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop)) {
+                if(!gate.isCloseButtonClicked) {
                     gate.openGate();
+                }
+            }
         }
        
         if (gate.shouldAbsoluteClose() && (!gate.isClosed)) {
-            if ((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
-                if(!gate.isOpenButtonClicked)
+            if ((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop)) {
+                if(!gate.isOpenButtonClicked) {
                     gate.closeGate();
                     gate.isCloseButtonClicked = false;
+                }
+            }
         }
         if (gate.shouldAbsoluteOpen() && (!gate.isOpened)) {
-            if ((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop))
-                if(!gate.isCloseButtonClicked)
+            if ((!(gate.isOpening || gate.isClosing)) && (!gate.isSafetyStop)) {
+                if(!gate.isCloseButtonClicked) {
                     gate.openGate();
                     gate.isOpenButtonClicked = false;
+                }
+            }
         }
 
         ledYellow.shouldBlink = (checkBatteryVoltage() < batteryDischargeVoltage) ? true : false;

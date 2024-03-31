@@ -1,7 +1,7 @@
 #ifndef SWITCHES_HPP
 #define SWITCHES_HPP
 
-// #define DEBUG
+#define DEBUG
 // #define ADJUST_TIME
 #define PRINT
 // #define LOG_MOVES
